@@ -1,0 +1,1 @@
+docker compose -f "compose.yml" --profile device up --pull always
