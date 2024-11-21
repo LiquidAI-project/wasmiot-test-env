@@ -1,0 +1,91 @@
+{
+  "uid": "12345678-1234-1234-1234-123456789012",
+  "type": "http://www.w3.org/ns/odrl/2/Set",
+  "profile": "http://www.w3.org/ns/odrl/2/",
+  "permission": [
+    {
+      "target": "high-risk",
+      "action": "use",
+      "constraint": [
+        {
+          "leftOperand": "zone",
+          "operator": "eq",
+          "rightOperand": "safe"
+        }
+      ]
+    },
+    {
+      "target": "medium-risk",
+      "action": "use",
+      "constraint": [
+        {
+          "leftOperand": "zone",
+          "operator": "isAnyOf",
+          "rightOperand": ["safe", "unsafe"]
+        }
+      ]
+    },
+    {
+      "target": "low-risk",
+      "action": "use",
+      "constraint": [
+        {
+          "leftOperand": "zone",
+          "operator": "isAnyOf",
+          "rightOperand": ["safe", "unsafe"]
+        }
+      ]
+    }
+  ],
+  "asset": [
+    {
+      "uid": "high-risk",
+      "relation": [
+        {
+          "type": "http://www.w3.org/ns/odrl/2/greaterThan",
+          "value": "medium-risk"
+        },
+        {
+          "type": "http://www.w3.org/ns/odrl/2/greaterThan",
+          "value": "low-risk"
+        }
+      ]
+    },
+    {
+      "uid": "medium-risk",
+      "relation": [
+        {
+          "type": "http://www.w3.org/ns/odrl/2/greaterThan",
+          "value": "low-risk"
+        },
+        {
+          "type": "http://www.w3.org/ns/odrl/2/lessThan",
+          "value": "high-risk"
+        }
+      ]
+    },
+    {
+      "uid": "low-risk",
+      "relation": [
+        {
+          "type": "http://www.w3.org/ns/odrl/2/lessThan",
+          "value": "medium-risk"
+        },
+        {
+          "type": "http://www.w3.org/ns/odrl/2/lessThan",
+          "value": "high-risk"
+        }
+      ]
+    },
+    {
+      "uid": "safe",
+      "title": "Safe Zone",
+      "dc:description": "A zone that allows low-risk and some medium-risk operations."
+    },
+    {
+      "uid": "unsafe",
+      "title": "Unsafe Zone",
+      "dc:description": "A zone that allows all risk levels."
+    }
+  ]
+}

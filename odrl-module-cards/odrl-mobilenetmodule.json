@@ -1,0 +1,28 @@
+{
+  "uid": "urn:uuid:12345678-1234-1234-1234-123456789014",
+  "type": "http://www.w3.org/ns/odrl/2/Set",
+  "profile": "http://www.w3.org/ns/odrl/2/",
+  "permission": [
+    {
+      "target": "666f28a128a0bd75d131e09a",
+      "action": "mobilenet",
+      "constraint": [
+        {
+          "leftOperand": "risk-level",
+          "operator": "eq",
+          "rightOperand": "low-risk"
+        },
+        {
+          "leftOperand": "input-type",
+          "operator": "eq",
+          "rightOperand": "temp"
+        },
+        {
+          "leftOperand": "output-risk",
+          "operator": "eq",
+          "rightOperand": "low-risk"
+        }
+      ]
+    }
+  ]
+}

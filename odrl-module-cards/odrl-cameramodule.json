@@ -1,0 +1,28 @@
+{
+  "uid": "urn:uuid:12345678-1234-1234-1234-123456789012",
+  "type": "http://www.w3.org/ns/odrl/2/Set",
+  "profile": "http://www.w3.org/ns/odrl/2/",
+  "permission": [
+    {
+      "target": "666f288c28a0bd75d131e099",
+      "action": "camera",
+      "constraint": [
+        {
+          "leftOperand": "risk-level",
+          "operator": "eq",
+          "rightOperand": "low-risk"
+        },
+        {
+          "leftOperand": "input-type",
+          "operator": "eq",
+          "rightOperand": "camera"
+        },
+        {
+          "leftOperand": "output-risk",
+          "operator": "eq",
+          "rightOperand": "inherit"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "uid": "urn:uuid:12345678-1234-1234-1234-123456789018",
+  "type": "http://www.w3.org/ns/odrl/2/Set",
+  "profile": "http://www.w3.org/ns/odrl/2/",
+  "asset": [
+    {
+      "uid": "1234abcd5678efgh9012ijkb",
+      "title": "camera_raspi3",
+      "relation": [
+        {
+          "type": "risk-level",
+          "value": "high-risk"
+        },
+        {
+          "type": "type",
+          "value": "camera"
+        },
+        {
+          "type": "nodeid",
+          "value": "666f286328a0bd75d131e095"
+        }
+      ]
+    }
+  ]
+}
