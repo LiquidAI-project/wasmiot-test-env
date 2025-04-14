@@ -97,48 +97,6 @@ services:
     devices:
       - /dev/video0:/dev/video0
 
-  raspi3:
-    extends: device-base
-    profiles:
-      - device
-    environment:
-      - DEVICE_TYPE=RaspberryPi-with-camera
-      - FLASK_APP=raspi3
-      - WASMIOT_SUPERVISOR_IP=172.15.0.23
-    ports:
-      - 3003:5000
-    privileged: true
-    volumes:
-      - ./devices/raspi3/configs:/app/instance/configs
-      - ./devices/raspi3/modules:/app/instance/modules
-      - ./devices/raspi3/output:/app/instance/output
-    networks:
-      default:
-        ipv4_address: 172.15.0.23
-    devices:
-      - /dev/video0:/dev/video0
-
-  raspi4:
-    extends: device-base
-    profiles:
-      - device
-    environment:
-      - DEVICE_TYPE=RaspberryPi-with-camera
-      - FLASK_APP=raspi4
-      - WASMIOT_SUPERVISOR_IP=172.15.0.24
-    ports:
-      - 3004:5000
-    privileged: true
-    volumes:
-      - ./devices/raspi4/configs:/app/instance/configs
-      - ./devices/raspi4/modules:/app/instance/modules
-      - ./devices/raspi4/output:/app/instance/output
-    networks:
-      default:
-        ipv4_address: 172.15.0.24
-    devices:
-      - /dev/video0:/dev/video0
-
 volumes:
   mongo-config:
   mongo-db:
