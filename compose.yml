@@ -1,156 +1,156 @@
-services:
-  # Orchestrator base service
-  orchestrator-base:
-    container_name: wasmiot-orchestrator
-    build:
-      context: wasmiot-orchestrator/fileserv
-      dockerfile: ./Dockerfile
-    ports:
-      - ${PUBLIC_PORT:-3000}:3000
-    networks:
-      default:
-        ipv4_address: 172.15.0.10
-    environment:
-      MONGO_HOST: ${MONGO_HOST:-mongo}
-      MONGO_PORT: ${MONGO_PORT:-27017}
-      MONGO_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
-      MONGO_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-      WASMIOT_INIT_FOLDER: ${WASMIOT_INIT_FOLDER:-/init}
-      WASMIOT_CLEAR_LOGS: ${WASMIOT_CLEAR_LOGS:-true}
-    volumes:
-      - ../init:/init
-    command: nodejs ./server.js
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
 
-  # Database service
-  mongo:
-    image: mongo:6.0.15
-    restart: unless-stopped
+# Shared supervisor config
+x-supervisor-common-config: &supervisor_common
+  image: wasmiot/supervisor-base:local
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    interval: 90s
+    timeout: 30s
+    retries: 3
+    start_period: 30s
+  privileged: true
+  devices:
+    - /dev/video0:/dev/video0
+  # depends_on:
+  #   wasmiot-orchestrator:
+  #     condition: service_healthy
+
+services:
+  
+  # Orchestrator service (Rust)
+  wasmiot-orchestrator:
+    tty: true
+    container_name: test-env-orchestrator
+    build:
+      context: orchestrator-rust-port
+      dockerfile: ./Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
+        PORT: ${PORT}
+    ports:
+      - "${PUBLIC_PORT}:${PUBLIC_PORT}"
+    env_file: .env
     networks:
       default:
-        ipv4_address: 172.15.0.2
+        ipv4_address: 172.20.0.10
+    volumes:
+      - type: bind
+        source: ./instance/orchestrator/files
+        target: /app/build/files
+      - type: bind
+        source: ./instance/orchestrator/init
+        target: /app/build/init
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://${PUBLIC_HOST}:${PUBLIC_PORT}/health"]
+      interval: 15s
+      timeout: 30s
+      retries: 3
+      start_period: 5s
+
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MONGO_PORT}:27017"
+    networks:
+      default:
+        ipv4_address: 172.20.0.20
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     command: mongod --port ${MONGO_PORT:-27017}
     volumes:
-      - mongo-config:/data/configdb
-      - mongo-db:/data/db
+      - mongo-test-config:/data/configdb
+      - mongo-test-db:/data/db
 
-  # Orchestrator webgui
-  webgui:
-    build:
-      context: ./orchestrator-webgui
-      dockerfile: js.Dockerfile
+  mongo-express:
+    image: mongo-express
+    restart: unless-stopped
     ports:
-      - 3313:3313
-    environment:
-      - PORT=3313
-      - DANGEROUSLY_DISABLE_HOST_CHECK=true
+      - "127.0.0.1:${MONGO_EXPRESS_PORT}:8081"
     networks:
       default:
-        ipv4_address: 172.15.0.19
-    depends_on:
-      orchestrator-base:
-        condition: service_healthy
+        ipv4_address: 172.20.0.30
+    environment:
+      ME_CONFIG_MONGODB_SERVER: ${MONGO_HOST}
+      ME_CONFIG_MONGODB_PORT: ${MONGO_PORT}
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
 
-  # Supervisor Base Service
-  device-base:
+  supervisor-image:
+    tty: true
     profiles:
       - ABSTRACT_BASE_HACK_DO_NOT_USE
+    image: wasmiot/supervisor-base:local
     build:
       context: ./rust-supervisor
       dockerfile: Dockerfile
-    env_file:
-      - .env
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 1m30s
-      timeout: 30s
-      retries: 3
-      start_period: 30s
 
-  # Supervisor Instances
-  raspi1:
-    extends: device-base
-    profiles:
-      - device
+  supervisor1:
+    <<: *supervisor_common
+    container_name: test-env-supervisor-1
     environment:
-      - WASMIOT_ORCHESTRATOR_URL=http://wasmiot-orchestrator:3000
-      - WASMIOT_LOGGING_ENDPOINT=http://wasmiot-orchestrator:3000/device/logs
-      - WASMIOT_SUPERVISOR_IP=172.15.0.21
-      - SUPERVISOR_NAME=rust-supervisor-1
       - DEFAULT_CAMERA_DEVICE=0
-      - DEFAULT_URL_SCHEME=http
-      - DEVICE_TYPE=RaspberryPi-with-camera
+      - WASMIOT_SUPERVISOR_NAME=rust-supervisor-1
       - WASMIOT_SUPERVISOR_PORT=8080
       - EXTERNAL_LOGGING_ENABLED=true
-      - RUST_LOG=info
-      - RUST_BACKTRACE=1
-      - WASM_RUNTIME=wasmtime
-    ports:
-      - 3001:8080
-    privileged: true
     volumes:
-      - ./devices/raspi1/configs:/app/instance/configs
-      - ./devices/raspi1/modules:/app/instance/modules
-      - ./devices/raspi1/output:/app/instance/output
+      - type: bind
+        source: ./instance/supervisor-1/configs
+        target: /app/instance/configs
+      - type: bind
+        source: ./instance/supervisor-1/outputs
+        target: /app/instance/outputs
+      - type: bind
+        source: ./instance/supervisor-1/wasm-modules
+        target: /app/instance/wasm-modules
+      - type: bind
+        source: ./instance/supervisor-1/wasm-params
+        target: /app/instance/wasm-params
     networks:
       default:
-        ipv4_address: 172.15.0.21
-    devices:
-      - /dev/video0:/dev/video0
-    depends_on:
-      orchestrator-base:
-        condition: service_healthy
-
-  raspi2:
-    extends: device-base
-    profiles:
-      - device
-    environment:
-      - WASMIOT_ORCHESTRATOR_URL=http://wasmiot-orchestrator:3000
-      - WASMIOT_LOGGING_ENDPOINT=http://wasmiot-orchestrator:3000/device/logs
-      - WASMIOT_SUPERVISOR_IP=172.15.0.22
-      - SUPERVISOR_NAME=rust-supervisor-2
-      - DEFAULT_CAMERA_DEVICE=0
-      - DEFAULT_URL_SCHEME=http
-      - DEVICE_TYPE=RaspberryPi-with-camera
-      - WASMIOT_SUPERVISOR_PORT=8080
-      - EXTERNAL_LOGGING_ENABLED=true
-      - RUST_LOG=info
-      - RUST_BACKTRACE=1
-      - WASM_RUNTIME=wasmtime
+        ipv4_address: 172.20.0.40
     ports:
       - 3002:8080
-    privileged: true
+
+  supervisor2:
+    <<: *supervisor_common
+    container_name: test-env-supervisor-2
+    environment:
+      - DEFAULT_CAMERA_DEVICE=0
+      - WASMIOT_SUPERVISOR_NAME=rust-supervisor-2
+      - WASMIOT_SUPERVISOR_PORT=8080
+      - EXTERNAL_LOGGING_ENABLED=true
     volumes:
-      - ./devices/raspi2/configs:/app/instance/configs
-      - ./devices/raspi2/modules:/app/instance/modules
-      - ./devices/raspi2/output:/app/instance/output
+      - type: bind
+        source: ./instance/supervisor-2/configs
+        target: /app/instance/configs
+      - type: bind
+        source: ./instance/supervisor-2/outputs
+        target: /app/instance/outputs
+      - type: bind
+        source: ./instance/supervisor-2/wasm-modules
+        target: /app/instance/wasm-modules
+      - type: bind
+        source: ./instance/supervisor-2/wasm-params
+        target: /app/instance/wasm-params
     networks:
       default:
-        ipv4_address: 172.15.0.22
-    devices:
-      - /dev/video0:/dev/video0
-    depends_on:
-      orchestrator-base:
-        condition: service_healthy
+        ipv4_address: 172.20.0.50
+    ports:
+      - 3003:8080
 
 volumes:
-  mongo-config:
-  mongo-db:
+  mongo-test-config:
+  mongo-test-db:
 
 networks:
   default:
-    name: wasmiot-net
+    name: wasmiot-test-net
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: 172.15.0.0/24
+        - subnet: 172.20.0.0/24

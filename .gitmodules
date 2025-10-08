@@ -1,11 +1,7 @@
 
-[submodule "wasmiot-orchestrator"]
-	path = wasmiot-orchestrator
-	url = git@github.com:LiquidAI-project/wasmiot-orchestrator.git
-	branch = metadata-cards
 [submodule "rust-supervisor"]
 	path = rust-supervisor
 	url = git@github.com:LiquidAI-project/supervisor-rust-port.git
-[submodule "orchestrator-webgui"]
-	path = orchestrator-webgui
-	url = git@github.com:LiquidAI-project/wasmiot-orchestrator-webgui.git
+[submodule "orchestrator-rust-port"]
+	path = orchestrator-rust-port
+	url = git@github.com:LiquidAI-project/orchestrator-rust-port.git

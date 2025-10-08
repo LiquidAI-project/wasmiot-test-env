@@ -1,8 +1,21 @@
 #!/bin/bash
+mkdir -p instance/orchestrator/files
+mkdir -p instance/orchestrator/init
 
-DIR=$(dirname "${BASH_SOURCE[0]}")
-export $(cat "${DIR}/.env" | xargs)
-docker compose -f "${DIR}/compose.yml" --profile device up --pull always
+mkdir -p instance/supervisor-1/configs
+mkdir -p instance/supervisor-1/outputs
+mkdir -p instance/supervisor-1/wasm-modules
+mkdir -p instance/supervisor-1/wasm-params
+cp init/*.json instance/supervisor-1/configs/
+
+mkdir -p instance/supervisor-2/configs
+mkdir -p instance/supervisor-2/outputs
+mkdir -p instance/supervisor-2/wasm-modules
+mkdir -p instance/supervisor-2/wasm-params
+cp init/*.json instance/supervisor-2/configs/
+
+cp .env ./orchestrator-rust-port/.env
+docker compose up --build --force-recreate --no-attach mongo --no-attach mongo-express
 
 
 
