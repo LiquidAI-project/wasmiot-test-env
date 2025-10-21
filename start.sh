@@ -15,7 +15,7 @@ mkdir -p instance/supervisor-2/wasm-params
 cp init/*.json instance/supervisor-2/configs/
 
 cp .env ./orchestrator-rust-port/.env
-docker compose up --build --force-recreate --no-attach mongo --no-attach mongo-express
+docker compose up --no-attach mongo --no-attach mongo-express
 
 
 

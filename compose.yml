@@ -93,9 +93,10 @@ services:
     container_name: test-env-supervisor-1
     environment:
       - DEFAULT_CAMERA_DEVICE=0
-      - WASMIOT_SUPERVISOR_NAME=rust-supervisor-1
+      - SUPERVISOR_NAME=rust-supervisor-1
       - WASMIOT_SUPERVISOR_PORT=8080
       - EXTERNAL_LOGGING_ENABLED=true
+      - WASMIOT_LOGGING_ENDPOINT=http://172.20.0.10:${PUBLIC_PORT}/device/logs
     volumes:
       - type: bind
         source: ./instance/supervisor-1/configs
@@ -120,9 +121,10 @@ services:
     container_name: test-env-supervisor-2
     environment:
       - DEFAULT_CAMERA_DEVICE=0
-      - WASMIOT_SUPERVISOR_NAME=rust-supervisor-2
+      - SUPERVISOR_NAME=rust-supervisor-2
       - WASMIOT_SUPERVISOR_PORT=8080
       - EXTERNAL_LOGGING_ENABLED=true
+      - WASMIOT_LOGGING_ENDPOINT=http://172.20.0.10:${PUBLIC_PORT}/device/logs
     volumes:
       - type: bind
         source: ./instance/supervisor-2/configs
